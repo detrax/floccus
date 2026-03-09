@@ -317,8 +317,19 @@ export class Folder<L extends TItemLocation> {
       this.createIndex()
     }
     const candidates = Object.values(this.index[type]).filter(fn)
-    // return the preferred match based on a preference measure
-    return candidates.sort((a, b) => prefer(a) - prefer(b)).pop()
+    if (candidates.length === 0) return null
+    if (candidates.length === 1) return candidates[0]
+    // Find best candidate in O(n) instead of O(n log n) sort
+    let best = candidates[0]
+    let bestScore = prefer(best)
+    for (let i = 1; i < candidates.length; i++) {
+      const score = prefer(candidates[i])
+      if (score > bestScore) {
+        bestScore = score
+        best = candidates[i]
+      }
+    }
+    return best
   }
 
   findFolder(id: string | number): Folder<L> {

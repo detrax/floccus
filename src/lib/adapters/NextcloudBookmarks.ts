@@ -969,6 +969,14 @@ export default class NextcloudBookmarksAdapter implements Adapter, BulkImportRes
         throw new HttpError(res.status, 'POST')
       }
 
+      // 423 means "already locked". If we already hold the lock, this is
+      // our own lock still active on the server — treat as success.
+      // The server cannot distinguish "our lock" from "someone else's lock",
+      // so when renewing we always get 423 for our own active lock.
+      if (res.status === 423 && this.locked) {
+        return true
+      }
+
       return res.status === 200 || res.status === 405
     })()
     return this.lockingPromise
